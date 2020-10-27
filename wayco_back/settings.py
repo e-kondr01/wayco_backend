@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'wayco_back.wsgi.application'
 
 DATABASES = {
     'default':
-        config('database_url', cast=db_url)
+        config('DATABASE_URL', cast=db_url)
 }
 
 
