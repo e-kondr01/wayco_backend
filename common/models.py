@@ -3,11 +3,13 @@ from django.db import models
 
 class Cafe(models.Model):
     name = models.CharField(max_length=128)
-    latitude = models.DecimalField(max_digits=4, decimal_places=2, null=True)
-    longitude = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    latitude = models.DecimalField(max_digits=4, decimal_places=2,
+                                   null=True, blank=True)
+    longitude = models.DecimalField(max_digits=4, decimal_places=2,
+                                    null=True, blank=True)
     address = models.CharField(max_length=128)
-    rating = models.PositiveSmallIntegerField(null=True)
-    description = models.TextField(null=True)
+    rating = models.PositiveSmallIntegerField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self) -> str:
         return f'{self.name}'
@@ -27,8 +29,8 @@ class CafePhoto(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=128)
-    price = models.DecimalField(max_digits=7, decimal_places=2, null=True)
-    image_src = models.URLField(null=True)
+    price = models.DecimalField(max_digits=7, decimal_places=2)
+    image_src = models.URLField(null=True, blank=True)
     cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE,
                              related_name='products')
 
@@ -49,8 +51,7 @@ class ProductOptionChoice(models.Model):
     product_option = models.ForeignKey(ProductOption, on_delete=models.PROTECT,
                                        related_name='choices')
     choice_name = models.CharField(max_length=128)
-    choice_price = models.DecimalField(max_digits=6, decimal_places=2,
-                                       null=True)
+    choice_price = models.DecimalField(max_digits=6, decimal_places=2)
 
     def __str__(self) -> str:
         return f'{self.product_option} {self.choice_name}'
@@ -61,8 +62,8 @@ class Order(models.Model):
                                  verbose_name='Номер заказа')
     total_sum = models.DecimalField(max_digits=8, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
-    done_at = models.DateTimeField(null=True)
-    finished_at = models.DateTimeField(null=True)
+    done_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=32)
     consumer = models.ForeignKey(Consumer, on_delete=models.PROTECT,
                                  related_name='orders')
