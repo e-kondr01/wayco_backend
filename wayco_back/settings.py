@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'accounts',
 
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'djoser',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -127,3 +130,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
