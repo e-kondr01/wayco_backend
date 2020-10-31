@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 from decouple import config
 from dj_database_url import parse as db_url
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,11 +36,12 @@ ALLOWED_HOSTS = [config('allowed_hosts')]
 INSTALLED_APPS = [
     'common',
     'accounts',
+    'consumer',
+    'cafe_administrator',
+    'cafe_barista',
 
     'rest_framework',
-    'rest_framework.authtoken',
     'rest_framework_simplejwt',
-    'djoser',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -138,3 +140,8 @@ REST_FRAMEWORK = {
     ],
 }
 
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
