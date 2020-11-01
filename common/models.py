@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Cafe(models.Model):
@@ -14,8 +15,16 @@ class Cafe(models.Model):
     def __str__(self) -> str:
         return f'{self.name}'
 
-#  import here so that we don't get circular import
-from accounts.models import Consumer
+
+class Consumer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE,
+                                related_name='consumer')
+    favourite_cafes = models.ManyToManyField(Cafe,
+                                             related_name='consumers_favourite',
+                                             blank=True)
+
+    def __str__(self) -> str:
+        return f'{self.user}'
 
 
 class CafePhoto(models.Model):
@@ -76,9 +85,9 @@ class OrderedProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT,
                                 related_name='ordered_products')
     quantity = models.PositiveSmallIntegerField(default=1)
-    chosen_options = models.ForeignKey(ProductOptionChoice,
-                                       on_delete=models.PROTECT,
-                                       related_name='ordered_products')
+    chosen_options = models.ManyToManyField(ProductOptionChoice,
+                                            related_name='ordered_products',
+                                            blank=True)
     order = models.ForeignKey(Order, on_delete=models.PROTECT,
                               related_name='ordered_products')
 
