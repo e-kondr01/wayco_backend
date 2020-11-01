@@ -23,6 +23,15 @@ class ActiveOrders(generics.ListCreateAPIView):
         return Order.objects.filter(consumer=user.consumer).filter(status='active')
 
 
+class OrderHistory(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    queryset = Order.objects.none()  # Required for DjangoModelPermissions
+
+    def get_queryset(self):
+        user = self.request.user
+        return Order.objects.filter(consumer=user.consumer).filter(status='done')
+
+
 class CafeList(generics.ListAPIView):
     queryset = Cafe.objects.all()
     serializer_class = CafeSerializer

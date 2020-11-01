@@ -67,6 +67,10 @@ class OrderedProductSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     ordered_products = OrderedProductSerializer(many=True)
 
+    def create(self, validated_data):
+        #  https://www.django-rest-framework.org/api-guide/serializers/#dealing-with-nested-objects
+        return Order(**validated_data)
+
     class Meta:
         model = Order
         fields = ['id', 'order_num', 'total_sum', 'status', 'ordered_products']
