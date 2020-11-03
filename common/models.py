@@ -68,8 +68,10 @@ class ProductOptionChoice(models.Model):
 
 class Order(models.Model):
     order_num = models.CharField(max_length=16,
-                                 verbose_name='Номер заказа')
-    total_sum = models.DecimalField(max_digits=8, decimal_places=2)
+                                 verbose_name='Номер заказа',
+                                 default=0)
+    total_sum = models.DecimalField(max_digits=8, decimal_places=2, blank=True,
+                                    default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     done_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
@@ -78,7 +80,13 @@ class Order(models.Model):
                                  related_name='orders')
 
     def __str__(self) -> str:
-        return f'Заказ {self.order_num}'
+        return f'Заказ {self.order_num} от {self.created_at}'
+
+    def calculate_total_sum(self):
+        for ordered_product in self.ordered_products.all():
+            self.total_sum += ordered_product.product.price
+            for chosen_option in ordered_product.chosen_options.all():
+                self.total_sum += chosen_option.choice_price
 
 
 class OrderedProduct(models.Model):
@@ -88,7 +96,7 @@ class OrderedProduct(models.Model):
     chosen_options = models.ManyToManyField(ProductOptionChoice,
                                             related_name='ordered_products',
                                             blank=True)
-    order = models.ForeignKey(Order, on_delete=models.PROTECT,
+    order = models.ForeignKey(Order, on_delete=models.CASCADE,
                               related_name='ordered_products')
 
     def __str__(self) -> str:
