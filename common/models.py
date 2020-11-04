@@ -9,7 +9,7 @@ class Cafe(models.Model):
     longitude = models.DecimalField(max_digits=4, decimal_places=2,
                                     null=True, blank=True)
     address = models.CharField(max_length=128)
-    rating = models.PositiveSmallIntegerField(blank=True, null=True)
+    average_rating = models.FloatField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
     def __str__(self) -> str:
@@ -101,3 +101,27 @@ class OrderedProduct(models.Model):
 
     def __str__(self) -> str:
         return f'Заказанный {self.product}'
+
+
+class CafeRating(models.Model):
+    consumer = models.ForeignKey(Consumer, on_delete=models.CASCADE,
+                                 related_name='ratings')
+    cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE,
+                             related_name='ratings')
+
+    VALUE_CHOICES = [
+        (1.0, 1.0),
+        (1.5, 1.5),
+        (2.0, 2.0),
+        (2.5, 2.5),
+        (3.0, 3.0),
+        (3.5, 3.5),
+        (4.0, 4.0),
+        (4.5, 4.5),
+        (5.0, 5.0),
+    ]
+
+    value = models.FloatField(choices=VALUE_CHOICES)
+
+    def __str__(self) -> str:
+        return f'{self.value} для {self.cafe} от {self.consumer}'
