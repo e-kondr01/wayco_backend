@@ -42,6 +42,8 @@ class Product(models.Model):
     image_src = models.URLField(null=True, blank=True)
     cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE,
                              related_name='products')
+    is_available = models.BooleanField()
+    has_options = models.BooleanField()
 
     def __str__(self) -> str:
         return f'{self.name}'
@@ -50,20 +52,22 @@ class Product(models.Model):
 class ProductOption(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT,
                                 related_name='options')
-    option_name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128)
 
     def __str__(self) -> str:
-        return f'{self.product} {self.option_name}'
+        return f'{self.product} {self.name}'
 
 
 class ProductOptionChoice(models.Model):
     product_option = models.ForeignKey(ProductOption, on_delete=models.PROTECT,
                                        related_name='choices')
-    choice_name = models.CharField(max_length=128)
-    choice_price = models.DecimalField(max_digits=6, decimal_places=2)
+    name = models.CharField(max_length=128)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    is_available = models.BooleanField(blank=True, null=True)
+    is_default = models.BooleanField()
 
     def __str__(self) -> str:
-        return f'{self.product_option} {self.choice_name}'
+        return f'{self.product_option} {self.name}'
 
 
 class Order(models.Model):
@@ -86,7 +90,7 @@ class Order(models.Model):
         for ordered_product in self.ordered_products.all():
             self.total_sum += ordered_product.product.price
             for chosen_option in ordered_product.chosen_options.all():
-                self.total_sum += chosen_option.choice_price
+                self.total_sum += chosen_option.price
 
 
 class OrderedProduct(models.Model):

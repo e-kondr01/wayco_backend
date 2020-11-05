@@ -9,7 +9,7 @@ class ProductOptionChoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOptionChoice
-        fields = ['id', 'choice_name', 'choice_price']
+        fields = ['id', 'name', 'price', 'is_available', 'is_default']
 
 
 class ProductOptionSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class ProductOptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOption
-        fields = ['id', 'option_name', 'choices']
+        fields = ['id', 'name', 'choices']
 
 
 class BackwardProductOptionSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class BackwardProductOptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOption
-        fields = ['id', 'option_name']
+        fields = ['id', 'name']
 
 
 class BackwardProductOptionChoiceSerializer(serializers.ModelSerializer):
@@ -34,23 +34,34 @@ class BackwardProductOptionChoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOptionChoice
-        fields = ['id', 'product_option', 'choice_name', 'choice_price']
+        fields = ['id', 'option', 'name', 'price']
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    '''This serializer is needed to view product's detials. '''
     options = ProductOptionSerializer(many=True, required=False)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'image_src', 'options']
+        fields = ['id', 'name', 'price', 'image_src',
+                  'options', 'is_available']
 
 
-class ProductNoOptionsSerializer(serializers.ModelSerializer):
+class ProductSerializerForHistory(serializers.ModelSerializer):
     '''This serializer is needed to view order history. '''
 
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'image_src']
+
+
+class ProductSerializerForMenu(serializers.ModelSerializer):
+    '''This serializer is needed to view cafe's products. '''
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'image_src',
+                  'is_available', 'has_options']
 
 
 class CafeSerializer(serializers.ModelSerializer):
@@ -63,7 +74,7 @@ class CafeSerializer(serializers.ModelSerializer):
 class ViewOrderedProductSerializer(serializers.ModelSerializer):
     chosen_options = BackwardProductOptionChoiceSerializer(
         many=True, required=False)
-    product = ProductNoOptionsSerializer()
+    product = ProductSerializerForHistory()
 
     class Meta:
         model = OrderedProduct

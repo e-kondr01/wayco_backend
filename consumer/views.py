@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from .serializers import *
 from common.serializers import (
-    CafeSerializer, ViewOrderSerializer, CreateOrderSerializer)
+    CafeSerializer, ViewOrderSerializer)
 from common.models import Consumer, Order, Cafe
 
 
@@ -41,14 +41,6 @@ class OrderHistory(generics.ListAPIView):
 class CafeList(generics.ListAPIView):
     queryset = Cafe.objects.all()
     serializer_class = CafeSerializer
-
-
-class CreateOrder(generics.CreateAPIView):
-    queryset = Order.objects.none()  # Required for DjangoModelPermissions
-    serializer_class = CreateOrderSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(consumer=self.request.user.consumer)
 
 
 class AddToFavourites(APIView):
