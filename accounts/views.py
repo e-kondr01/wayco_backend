@@ -34,3 +34,15 @@ class CreateCafeBaristaUser(APIView):
                                 status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IsLoginUnique(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, format='json'):
+        username = request.data['login']
+        if User.objects.filter(username=username):
+            resp = {'username_status': 'taken'}
+        else:
+            resp = {'username_status': 'free'}
+        return Response(resp, status=status.HTTP_200_OK)

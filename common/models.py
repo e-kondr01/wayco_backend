@@ -88,9 +88,12 @@ class Order(models.Model):
 
     def calculate_total_sum(self):
         for ordered_product in self.ordered_products.all():
-            self.total_sum += ordered_product.product.price
+            price = 0
+            price += ordered_product.product.price
             for chosen_option in ordered_product.chosen_options.all():
-                self.total_sum += chosen_option.price
+                price += chosen_option.price
+            
+            self.total_sum += price * ordered_product.quantity
 
 
 class OrderedProduct(models.Model):

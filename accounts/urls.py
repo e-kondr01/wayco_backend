@@ -7,10 +7,10 @@ from rest_framework_simplejwt.views import (
 
 
 urlpatterns = [
-    path('new_consumer/', views.CreateConsumerUser.as_view(),
-         name='create_consumer_account'),
-    path('new_barista/', views.CreateCafeBaristaUser.as_view(),
+    path('consumers', views.CreateConsumerUser.as_view()),
+    path('employees', views.CreateCafeBaristaUser.as_view(),
          name='create_cafe_barista_account'),
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('login-unique', views.IsLoginUnique.as_view())
 ]

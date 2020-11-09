@@ -34,7 +34,7 @@ class BackwardProductOptionChoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOptionChoice
-        fields = ['id', 'option', 'name', 'price']
+        fields = ['id', 'product_option', 'name', 'price']
 
 
 class ProductSerializer(serializers.ModelSerializer):

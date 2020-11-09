@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from .serializers import *
 from common.serializers import (
-    CafeSerializer, ViewOrderSerializer)
+    CafeSerializer)
 from common.models import Consumer, Order, Cafe
 
 
@@ -18,24 +18,6 @@ class ConsumerUserInfo(generics.RetrieveAPIView):
     def get_object(self):
         obj = get_object_or_404(User, pk=self.request.user.pk)
         return obj
-
-
-class ActiveOrders(generics.ListAPIView):
-    serializer_class = ViewOrderSerializer
-    queryset = Order.objects.none()  # Required for DjangoModelPermissions
-
-    def get_queryset(self):
-        user = self.request.user
-        return Order.objects.filter(consumer=user.consumer).filter(status='active')
-
-
-class OrderHistory(generics.ListAPIView):
-    serializer_class = ViewOrderSerializer
-    queryset = Order.objects.none()  # Required for DjangoModelPermissions
-
-    def get_queryset(self):
-        user = self.request.user
-        return Order.objects.filter(consumer=user.consumer).filter(status='done')
 
 
 class CafeList(generics.ListAPIView):
@@ -68,16 +50,20 @@ class RateCafe(generics.CreateAPIView):
     serializer_class = CafeRatingSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        cafe = get_object_or_404(Cafe, pk=self.kwargs['pk'])
 
-        cafe = Cafe.objects.get(pk=request.data['cafe'])
+        data = request.data
+        data['cafe'] = cafe.pk
+        data['consumer'] = request.user.consumer.pk
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         old_rating = CafeRating.objects.filter(consumer=request.user.consumer).filter(cafe=cafe)
 
         if old_rating:
             old_rating.delete()
-
-        serializer.save(consumer=request.user.consumer)
 
         ''' Update cafe's average rating '''
         avg_rating = 0
@@ -89,4 +75,5 @@ class RateCafe(generics.CreateAPIView):
         cafe.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=headers)

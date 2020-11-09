@@ -23,9 +23,9 @@ class ConsumerUserInfoSerializer(serializers.ModelSerializer):
 
 class CafeRatingSerializer(serializers.ModelSerializer):
     consumer = serializers.PrimaryKeyRelatedField(
-        queryset=Consumer.objects.all(), required=False)
+        queryset=Consumer.objects.all())
     cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
 
     class Meta:
         model = CafeRating
-        fields = ['consumer', 'cafe', 'value'] 
+        fields = ['consumer', 'cafe', 'value']
