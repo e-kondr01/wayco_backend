@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'common',
     'accounts',
     'consumer',
-    'cafe_administrator',
-    'cafe_barista',
+    'cafe_admin',
+    'employee',
 
     'rest_framework',
     'rest_framework_simplejwt',

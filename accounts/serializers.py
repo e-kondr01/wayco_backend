@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User, Group
-from django.contrib.auth.hashers import make_password
+from common.models import Consumer, Cafe, Employee
 
 
 class ConsumerUserSerializer(serializers.ModelSerializer):
@@ -24,6 +24,8 @@ class ConsumerUserSerializer(serializers.ModelSerializer):
                                         password=validated_data['password'])
         group = Group.objects.get(name='consumers')
         user.groups.add(group)
+        consumer = Consumer(user=user)
+        consumer.save()
         return user
 
     class Meta:
@@ -31,21 +33,37 @@ class ConsumerUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password', 'password_confirmation')
 
 
-class CafeBaristaUserSerializer(serializers.ModelSerializer):
+class EmployeeUserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
             max_length=32,
             validators=[UniqueValidator(queryset=User.objects.all())]
             )
     password = serializers.CharField(min_length=8, write_only=True)
+    password_confirmation = serializers.CharField(
+            min_length=8, write_only=True)
+    registration_code = serializers.CharField(max_length=32)
+
+    def validate_registration_code(self, value):
+        if not Cafe.objects.filter(registration_code=value).first():
+            raise serializers.ValidationError("Incorrect registration code.")
+        return value
+
+    def validate(self, data):
+        if data['password'] != data['password_confirmation']:
+            raise serializers.ValidationError("Passwords do not match.")
+        return data
 
     def create(self, validated_data):
+        cafe = Cafe.objects.filter(registration_code=validated_data['registration_code']).first()
         user = User.objects.create_user(validated_data['username'],
                                         password=validated_data['password'])
-        group = Group.objects.get(name='cafe_baristas')
+        group = Group.objects.get(name='employees')
         user.groups.add(group)
-
+        employee = Employee(user=user, cafe=cafe)
+        employee.save()
         return user
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'registration_code', 'username',
+                  'password', 'password_confirmation')

@@ -8,7 +8,7 @@ class OrderedProductInline(admin.StackedInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
-    readonly_fields = ('created_at',)
+    readonly_fields = ('id', 'created_at',)
     inlines = [OrderedProductInline]
 
 
@@ -21,3 +21,4 @@ admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderedProduct)
 admin.site.register(Consumer)
 admin.site.register(CafeRating)
+admin.site.register(Employee)

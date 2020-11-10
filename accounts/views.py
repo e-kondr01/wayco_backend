@@ -13,8 +13,6 @@ class CreateConsumerUser(APIView):
         serializer = ConsumerUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            consumer = Consumer(user=user)
-            consumer.save()
             if user:
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
@@ -22,16 +20,15 @@ class CreateConsumerUser(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateCafeBaristaUser(APIView):
+class CreateEmployeeUser(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, format='json'):
-        serializer = CafeBaristaUserSerializer(data=request.data)
+        serializer = EmployeeUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
+                return Response(status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

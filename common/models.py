@@ -11,6 +11,7 @@ class Cafe(models.Model):
     address = models.CharField(max_length=128)
     average_rating = models.FloatField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    registration_code = models.CharField(max_length=32)
 
     def __str__(self) -> str:
         return f'{self.name}'
@@ -77,11 +78,13 @@ class Order(models.Model):
     total_sum = models.DecimalField(max_digits=8, decimal_places=2, blank=True,
                                     default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    done_at = models.DateTimeField(null=True, blank=True)
-    finished_at = models.DateTimeField(null=True, blank=True)
+    ready_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=32)
     consumer = models.ForeignKey(Consumer, on_delete=models.PROTECT,
                                  related_name='orders')
+    cafe = models.ForeignKey(Cafe, on_delete=models.PROTECT,
+                             related_name='orders')
 
     def __str__(self) -> str:
         return f'Заказ {self.order_num} от {self.created_at}'
@@ -92,7 +95,7 @@ class Order(models.Model):
             price += ordered_product.product.price
             for chosen_option in ordered_product.chosen_options.all():
                 price += chosen_option.price
-            
+
             self.total_sum += price * ordered_product.quantity
 
 
@@ -132,3 +135,13 @@ class CafeRating(models.Model):
 
     def __str__(self) -> str:
         return f'{self.value} для {self.cafe} от {self.consumer}'
+
+
+class Employee(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE,
+                                related_name='employee')
+    cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE,
+                             related_name='employees')
+
+    def __str__(self) -> str:
+        return f'{self.user}'

@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from common.models import (
     Product, Cafe, ProductOption, ProductOptionChoice, Order, OrderedProduct,
+    Consumer,
     )
 
 
@@ -93,10 +94,11 @@ class CreateOrderedProductSerializer(serializers.ModelSerializer):
 
 class CreateOrderSerializer(serializers.ModelSerializer):
     ordered_products = CreateOrderedProductSerializer(many=True)
+    cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
 
     class Meta:
         model = Order
-        fields = ['order_num', 'total_sum', 'status', 'ordered_products']
+        fields = ['order_num', 'total_sum', 'status', 'cafe', 'ordered_products']
 
     def create(self, validated_data):
         ordered_products_data = validated_data.pop('ordered_products')
@@ -116,9 +118,42 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         return order
 
 
-class ViewOrderSerializer(serializers.ModelSerializer):
+class ViewActiveOrderSerializerForConsumer(serializers.ModelSerializer):
     ordered_products = ViewOrderedProductSerializer(many=True)
+    cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
 
     class Meta:
         model = Order
-        fields = ['id', 'order_num', 'total_sum', 'status', 'ordered_products']
+        fields = ['id', 'cafe', 'order_num', 'created_at', 'total_sum',
+                  'status', 'ordered_products']
+
+
+class ViewActiveOrderSerializerForEmployee(serializers.ModelSerializer):
+    ordered_products = ViewOrderedProductSerializer(many=True)
+    consumer = serializers.StringRelatedField()
+
+    class Meta:
+        model = Order
+        fields = ['id', 'consumer', 'order_num', 'created_at', 'total_sum',
+                  'status', 'ordered_products']
+
+
+class ViewCompletedOrderSerializerForConsumer(serializers.ModelSerializer):
+    ordered_products = ViewOrderedProductSerializer(many=True)
+    cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
+
+    class Meta:
+        model = Order
+        fields = ['id', 'cafe', 'order_num', 'created_at', 'completed_at',
+                  'total_sum', 'status', 'ordered_products', ]
+
+
+class ViewCompletedOrderSerializerForEmployee(serializers.ModelSerializer):
+    ordered_products = ViewOrderedProductSerializer(many=True)
+    consumer = serializers.StringRelatedField()
+
+    class Meta:
+        model = Order
+        fields = ['id', 'consumer', 'order_num', 'created_at',
+                  'ready_at', 'completed_at', 'total_sum', 'status',
+                  'ordered_products']

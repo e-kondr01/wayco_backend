@@ -22,7 +22,23 @@ class ConsumerUserInfo(generics.RetrieveAPIView):
 
 class CafeList(generics.ListAPIView):
     queryset = Cafe.objects.all()
-    serializer_class = CafeSerializer
+    serializer_class = CafeSerializerForConsumer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+
+        resp = serializer.data
+        for cafe_info in resp:
+            cafe = Cafe.objects.get(pk=cafe_info['id'])
+            rating_object = request.user.consumer.ratings.filter(cafe=cafe).first()
+            if rating_object:
+                rating = rating_object.value
+            else:
+                rating = None
+            cafe_info['user_rating'] = rating
+
+        return Response(resp)
 
 
 class AddToFavourites(APIView):
