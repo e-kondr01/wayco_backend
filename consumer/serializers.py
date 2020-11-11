@@ -29,11 +29,3 @@ class CafeRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = CafeRating
         fields = ['consumer', 'cafe', 'value']
-
-
-class CafeSerializerForConsumer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Cafe
-        fields = ['id', 'name', 'latitude', 'longitude',
-                  'address', 'average_rating', 'description']

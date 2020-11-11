@@ -1,9 +1,8 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
-from common.models import (
+
+from .models import (
     Product, Cafe, ProductOption, ProductOptionChoice, Order, OrderedProduct,
-    Consumer,
-    )
+    CafePhoto)
 
 
 class ProductOptionChoiceSerializer(serializers.ModelSerializer):
@@ -48,6 +47,29 @@ class ProductSerializer(serializers.ModelSerializer):
                   'options', 'is_available']
 
 
+class CreateProductSerializer(serializers.ModelSerializer):
+    '''This serializer is needed to create a new product. '''
+    options = ProductOptionSerializer(many=True, required=False)
+
+    class Meta:
+        model = Product
+        fields = ['name', 'price', 'has_options', 'image_src', 'options']
+
+    def create(self, validated_data):
+        options_data = validated_data.pop('options')
+        product = Product.objects.create(**validated_data)
+
+        for option_data in options_data:
+            choices_data = option_data.pop('choices')
+            option = ProductOption.objects.create(
+                product=product, **option_data)
+            for choice_data in choices_data:
+                choice = ProductOptionChoice.objects.create(
+                    product_option=option, **choice_data)
+
+        return product
+
+
 class ProductSerializerForHistory(serializers.ModelSerializer):
     '''This serializer is needed to view order history. '''
 
@@ -63,13 +85,6 @@ class ProductSerializerForMenu(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'price', 'image_src',
                   'is_available', 'has_options']
-
-
-class CafeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Cafe
-        fields = '__all__'
 
 
 class ViewOrderedProductSerializer(serializers.ModelSerializer):
@@ -98,7 +113,8 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['order_num', 'total_sum', 'status', 'cafe', 'ordered_products']
+        fields = ['order_num', 'total_sum', 'status',
+                  'cafe', 'ordered_products']
 
     def create(self, validated_data):
         ordered_products_data = validated_data.pop('ordered_products')
@@ -157,3 +173,39 @@ class ViewCompletedOrderSerializerForEmployee(serializers.ModelSerializer):
         fields = ['id', 'consumer', 'order_num', 'created_at',
                   'ready_at', 'completed_at', 'total_sum', 'status',
                   'ordered_products']
+
+
+class CafePhotoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CafePhoto
+        fields = ['image_src']
+
+
+class CafeSerializer(serializers.ModelSerializer):
+    photos = CafePhotoSerializer(many=True)
+
+    class Meta:
+        model = Cafe
+        fields = ['id', 'name', 'photos', 'latitude', 'longitude',
+                  'address', 'average_rating', 'description']
+
+
+class UpdateCafeSerializer(serializers.ModelSerializer):
+    photos = CafePhotoSerializer(many=True)
+
+    class Meta:
+        model = Cafe
+        fields = ['name', 'photos', 'latitude', 'longitude',
+                  'address', 'description']
+
+    def update(self, instance, validated_data):
+        photos_data = validated_data.pop('photos')
+
+        instance.name = validated_data.get('name', instance.name)
+        instance.latitude = validated_data.get('latitude', instance.latitude)
+        instance.longitude = validated_data.get('longitude', instance.longitude)
+        instance.address = validated_data.get('address', instance.address)
+        instance.description = validated_data.get('description', instance.description)
+        instance.save()
+        return instance

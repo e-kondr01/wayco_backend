@@ -5,8 +5,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .serializers import *
-from common.serializers import (
-    CafeSerializer)
 from common.models import Consumer, Order, Cafe
 
 
@@ -18,27 +16,6 @@ class ConsumerUserInfo(generics.RetrieveAPIView):
     def get_object(self):
         obj = get_object_or_404(User, pk=self.request.user.pk)
         return obj
-
-
-class CafeList(generics.ListAPIView):
-    queryset = Cafe.objects.all()
-    serializer_class = CafeSerializerForConsumer
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-
-        resp = serializer.data
-        for cafe_info in resp:
-            cafe = Cafe.objects.get(pk=cafe_info['id'])
-            rating_object = request.user.consumer.ratings.filter(cafe=cafe).first()
-            if rating_object:
-                rating = rating_object.value
-            else:
-                rating = None
-            cafe_info['user_rating'] = rating
-
-        return Response(resp)
 
 
 class AddToFavourites(APIView):

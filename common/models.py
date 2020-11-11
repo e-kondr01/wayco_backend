@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 class Cafe(models.Model):
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, unique=True)
     latitude = models.DecimalField(max_digits=4, decimal_places=2,
                                    null=True, blank=True)
     longitude = models.DecimalField(max_digits=4, decimal_places=2,
@@ -43,7 +43,7 @@ class Product(models.Model):
     image_src = models.URLField(null=True, blank=True)
     cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE,
                              related_name='products')
-    is_available = models.BooleanField()
+    is_available = models.BooleanField(null=True, blank=True)
     has_options = models.BooleanField()
 
     def __str__(self) -> str:
