@@ -45,9 +45,11 @@ class Product(models.Model):
                              related_name='products')
     is_available = models.BooleanField(null=True, blank=True)
     has_options = models.BooleanField()
+    on_menu = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f'{self.name}'
+        return f'{self.name} от {self.created_at}'
 
 
 class ProductOption(models.Model):

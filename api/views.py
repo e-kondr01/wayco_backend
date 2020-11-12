@@ -1,7 +1,9 @@
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework import status as drf_status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import *
@@ -9,33 +11,39 @@ from .serializers import *
 
 
 class Products(generics.ListCreateAPIView):
+    '''Cafe menu'''
     serializer_class = ProductSerializerForMenu
     queryset = Product.objects.none()  # Required for DjangoModelPermissions
 
     def get_queryset(self):
         pk = self.kwargs['cafe_pk']
         cafe = Cafe.objects.get(pk=pk)
-        return Product.objects.filter(cafe=cafe)
+        return Product.objects.filter(cafe=cafe).filter(on_menu=True)
 
     def create(self, request, *args, **kwargs):
-        '''The first line is changed to have different serializers for retreive and create'''
+        '''The first line is changed to have different
+         serializers for retrieve and create'''
         serializer = CreateProductSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=drf_status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=drf_status.HTTP_201_CREATED,
+            headers=headers)
 
     def perform_create(self, serializer):
         serializer.save(cafe=self.request.user.employee.cafe)
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
+    '''This view handles all CRUD operations for cafe's products'''
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_url_kwarg = 'product_pk'
 
     def get_permitted_queryset(self):
-        '''This method was changed so that employee can't edit or delete products from other cafes'''
+        '''This method was changed so that employee can't edit
+         or delete products from other cafes'''
         cafe = self.request.user.employee.cafe
         return Product.objects.filter(cafe=cafe)
 
@@ -59,21 +67,45 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
         return obj
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_permitted_object()  # This line is changed
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        #  partial = kwargs.pop('partial', False)
+        instance = self.get_permitted_object()  # This line was changed
+
+        '''We want to actually create a new object '''
+        serializer = CreateProductSerializer(data=request.data)
+
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        self.perform_update(serializer, instance)  # Need instance to remove from menu
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=drf_status.HTTP_201_CREATED)
+
+    def perform_update(self, serializer, instance):
+        '''Custom method to create new products to keep track of
+        legacy prices etc.'''
+        instance.on_menu = False
+        instance.save()
+        serializer.save(on_menu=True, cafe=self.request.user.employee.cafe)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_permitted_object()  # This line was changed
-        self.perform_destroy(instance)
-        return Response(status=drf_status.HTTP_204_NO_CONTENT)
+        if instance.on_menu is False:
+            data = {
+                'error': 'This product has already been removed from menu'
+            }
+            return Response(data=data, status=drf_status.HTTP_400_BAD_REQUEST)
+        else:
+            self.perform_destroy(instance)
+            data = {
+                'success': 'This product has been successfuly removed from menu'
+            }
+            return Response(status=drf_status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        '''Custom method to not actually delete legacy products from DB'''
+        instance.on_menu = False
+        instance.save()
 
 
 class Orders(generics.ListCreateAPIView):
@@ -160,3 +192,68 @@ class CafeDetail(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         cafe = self.request.user.employee.cafe
         return Cafe.objects.filter(pk=cafe.pk)
+
+
+class ConsumerUserInfo(generics.RetrieveAPIView):
+    ''' Get consumer info'''
+    serializer_class = ConsumerUserInfoSerializer
+    queryset = Consumer.objects.none()  # Required for DjangoModelPermissions
+
+    def get_object(self):
+        obj = get_object_or_404(User, pk=self.request.user.pk)
+        return obj
+
+
+class AddToFavourites(APIView):
+    queryset = Consumer.objects.none()  # Required for DjangoModelPermissions
+
+    def get(self, request, pk):
+        consumer = get_object_or_404(Consumer, pk=request.user.consumer.pk)
+        cafe = get_object_or_404(Cafe, pk=pk)
+        consumer.favourite_cafes.add(cafe)
+        return Response(status=status.HTTP_200_OK)
+
+
+class RemoveFromFavourites(APIView):
+    queryset = Consumer.objects.none()  # Required for DjangoModelPermissions
+
+    def get(self, request, pk):
+        consumer = get_object_or_404(Consumer, pk=request.user.consumer.pk)
+        cafe = get_object_or_404(Cafe, pk=pk)
+        consumer.favourite_cafes.remove(cafe)
+        return Response(status=status.HTTP_200_OK)
+
+
+class RateCafe(generics.CreateAPIView):
+    queryset = CafeRating.objects.all()
+    serializer_class = CafeRatingSerializer
+
+    def create(self, request, *args, **kwargs):
+        cafe = get_object_or_404(Cafe, pk=self.kwargs['pk'])
+
+        data = request.data
+        data['cafe'] = cafe.pk
+        data['consumer'] = request.user.consumer.pk
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        old_rating = CafeRating.objects.filter(consumer=request.user.consumer).filter(cafe=cafe)
+
+        if old_rating:
+            old_rating.delete()
+
+        ''' Update cafe's average rating '''
+        avg_rating = 0
+        cafe_ratings = CafeRating.objects.filter(cafe=cafe)
+        for rating in cafe_ratings:
+            avg_rating += rating.value
+        avg_rating /= len(cafe_ratings)
+        cafe.average_rating = round(avg_rating, 1)
+        cafe.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+

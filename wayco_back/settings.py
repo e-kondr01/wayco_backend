@@ -34,11 +34,8 @@ ALLOWED_HOSTS = [config('allowed_hosts')]
 # Application definition
 
 INSTALLED_APPS = [
-    'common',
+    'api',
     'accounts',
-    'consumer',
-    'cafe_admin',
-    'employee',
 
     'rest_framework',
     'rest_framework_simplejwt',
@@ -136,7 +133,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-    'wayco_back.permissions.CustomDjangoModelPermissions',
+        'wayco_back.permissions.CustomDjangoModelPermissions',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -145,6 +142,6 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
