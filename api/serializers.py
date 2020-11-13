@@ -8,7 +8,7 @@ class ProductOptionChoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOptionChoice
-        fields = ['id', 'name', 'price', 'is_available', 'is_default']
+        fields = ['id', 'name', 'price', 'available', 'default']
 
 
 class ProductOptionSerializer(serializers.ModelSerializer):
@@ -36,14 +36,22 @@ class BackwardProductOptionChoiceSerializer(serializers.ModelSerializer):
         fields = ['id', 'product_option', 'name', 'price']
 
 
+class ProductSerializerForHistory(serializers.ModelSerializer):
+    '''This serializer is needed to view order history. '''
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'image_src']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     '''This serializer is needed to view product's detials. '''
     options = ProductOptionSerializer(many=True, required=False)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'image_src',
-                  'options', 'is_available']
+        fields = ['id', 'name', 'price', 'image_src', 'available',
+                  'options']
 
 
 class CreateProductSerializer(serializers.ModelSerializer):
@@ -52,7 +60,7 @@ class CreateProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['name', 'price', 'has_options', 'image_src', 'options']
+        fields = ['id', 'name', 'price', 'has_options', 'image_src', 'options']
 
     def create(self, validated_data):
         options_data = validated_data.pop('options')
@@ -69,21 +77,13 @@ class CreateProductSerializer(serializers.ModelSerializer):
         return product
 
 
-class ProductSerializerForHistory(serializers.ModelSerializer):
-    '''This serializer is needed to view order history. '''
-
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'price', 'image_src']
-
-
 class ProductSerializerForMenu(serializers.ModelSerializer):
     '''This serializer is needed to view cafe's products. '''
 
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'image_src',
-                  'is_available', 'has_options']
+                  'available', 'has_options']
 
 
 class ViewOrderedProductSerializer(serializers.ModelSerializer):
@@ -99,7 +99,8 @@ class ViewOrderedProductSerializer(serializers.ModelSerializer):
 class CreateOrderedProductSerializer(serializers.ModelSerializer):
     chosen_options = serializers.PrimaryKeyRelatedField(
         many=True, required=False, queryset=ProductOptionChoice.objects.all())
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all())
 
     class Meta:
         model = OrderedProduct
@@ -109,6 +110,10 @@ class CreateOrderedProductSerializer(serializers.ModelSerializer):
 class CreateOrderSerializer(serializers.ModelSerializer):
     ordered_products = CreateOrderedProductSerializer(many=True)
     cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
+    status = serializers.CharField(max_length=16, required=False)
+    order_num = serializers.CharField(max_length=16, required=False)
+    total_sum = serializers.DecimalField(max_digits=8, decimal_places=2,
+                                         required=False)
 
     class Meta:
         model = Order
@@ -117,7 +122,7 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ordered_products_data = validated_data.pop('ordered_products')
-        order = Order.objects.create(**validated_data)
+        order = Order.objects.create(status='active', **validated_data)
 
         for ordered_product_data in ordered_products_data:
             chosen_options_data = ordered_product_data.pop('chosen_options')
@@ -203,9 +208,11 @@ class UpdateCafeSerializer(serializers.ModelSerializer):
 
         instance.name = validated_data.get('name', instance.name)
         instance.latitude = validated_data.get('latitude', instance.latitude)
-        instance.longitude = validated_data.get('longitude', instance.longitude)
+        instance.longitude = validated_data.get(
+            'longitude', instance.longitude)
         instance.address = validated_data.get('address', instance.address)
-        instance.description = validated_data.get('description', instance.description)
+        instance.description = validated_data.get(
+            'description', instance.description)
         instance.save()
         return instance
 

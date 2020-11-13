@@ -54,7 +54,8 @@ class EmployeeUserSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        cafe = Cafe.objects.filter(registration_code=validated_data['registration_code']).first()
+        cafe = Cafe.objects.filter(
+            registration_code=validated_data['registration_code']).first()
         user = User.objects.create_user(validated_data['username'],
                                         password=validated_data['password'])
         group = Group.objects.get(name='employees')
