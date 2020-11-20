@@ -45,26 +45,21 @@ class ProductSerializerForHistory(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    '''This serializer is needed to view product's detials. '''
+    '''This serializer is needed to create a new product and
+       view product's details '''
     options = ProductOptionSerializer(many=True, required=False)
+    available = serializers.BooleanField(required=False)
 
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'image_src', 'available',
                   'options']
 
-
-class CreateProductSerializer(serializers.ModelSerializer):
-    '''This serializer is needed to create a new product. '''
-    options = ProductOptionSerializer(many=True, required=False)
-
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'price', 'has_options', 'image_src', 'options']
-
     def create(self, validated_data):
         options_data = validated_data.pop('options')
-        product = Product.objects.create(**validated_data)
+        has_options = True if options_data else False
+        product = Product.objects.create(has_options=has_options,
+                                         **validated_data)
 
         for option_data in options_data:
             choices_data = option_data.pop('choices')
@@ -78,7 +73,8 @@ class CreateProductSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializerForMenu(serializers.ModelSerializer):
-    '''This serializer is needed to view cafe's products. '''
+    '''This serializer is needed to view cafe's products.
+    (doesn't include product options)'''
 
     class Meta:
         model = Product
@@ -93,7 +89,7 @@ class ViewOrderedProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderedProduct
-        fields = ['quantity', 'product', 'chosen_options']
+        fields = ['id', 'quantity', 'product', 'chosen_options']
 
 
 class CreateOrderedProductSerializer(serializers.ModelSerializer):
@@ -104,7 +100,7 @@ class CreateOrderedProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderedProduct
-        fields = ['quantity', 'product', 'chosen_options']
+        fields = ['id', 'quantity', 'product', 'chosen_options']
 
 
 class CreateOrderSerializer(serializers.ModelSerializer):
@@ -117,7 +113,7 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['order_num', 'total_sum', 'status',
+        fields = ['id', 'order_num', 'total_sum', 'status',
                   'cafe', 'ordered_products']
 
     def create(self, validated_data):
@@ -183,7 +179,7 @@ class CafePhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CafePhoto
-        fields = ['image_src']
+        fields = ['id', 'image_src']
 
 
 class CafeSerializer(serializers.ModelSerializer):
@@ -191,17 +187,9 @@ class CafeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cafe
-        fields = ['id', 'name', 'photos', 'latitude', 'longitude',
-                  'address', 'average_rating', 'description']
-
-
-class UpdateCafeSerializer(serializers.ModelSerializer):
-    photos = CafePhotoSerializer(many=True)
-
-    class Meta:
-        model = Cafe
-        fields = ['name', 'photos', 'latitude', 'longitude',
-                  'address', 'description']
+        fields = ['id', 'name', 'photos', 'average_rating', 'latitude',
+                  'longitude', 'address', 'description']
+        read_only_fields = ['average_rating']
 
     def update(self, instance, validated_data):
         photos_data = validated_data.pop('photos')
@@ -222,7 +210,7 @@ class ConsumerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Consumer
-        fields = ['favourite_cafes']
+        fields = ['id', 'favourite_cafes']
 
 
 class ConsumerUserInfoSerializer(serializers.ModelSerializer):
@@ -240,4 +228,4 @@ class CafeRatingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CafeRating
-        fields = ['consumer', 'cafe', 'value']
+        fields = ['id', 'consumer', 'cafe', 'value']

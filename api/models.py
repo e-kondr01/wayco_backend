@@ -82,6 +82,7 @@ class Order(models.Model):
                                     null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     ready_at = models.DateTimeField(null=True, blank=True)
+    # Completed is either claimed or unclaimed
     completed_at = models.DateTimeField(null=True, blank=True)
     consumer = models.ForeignKey(Consumer, on_delete=models.PROTECT,
                                  related_name='orders')
@@ -90,7 +91,7 @@ class Order(models.Model):
 
     STATUS_CHOICES = [
         ('active', 'active'),  # Заказ принят
-        ('completed', 'completed'),  # Заказ забрали
+        ('claimed', 'claimed'),  # Заказ забрали
         ('ready', 'ready'),  # Заказ готов
         ('unclaimed', 'unclaimed')  # Заказ не забрали
     ]
