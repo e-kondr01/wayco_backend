@@ -58,8 +58,10 @@ class EmployeeUserSerializer(serializers.ModelSerializer):
             registration_code=validated_data['registration_code']).first()
         user = User.objects.create_user(validated_data['username'],
                                         password=validated_data['password'])
-        group = Group.objects.get(name='employees')
-        user.groups.add(group)
+        employees = Group.objects.get(name='employees')
+        user.groups.add(employees)
+        consumers = Group.objects.get(name='employees')
+        user.groups.add(consumers)
         employee = Employee(user=user, cafe=cafe)
         employee.save()
         return user
