@@ -9,7 +9,6 @@ from rest_framework.response import Response
 
 from .models import *
 from .serializers import *
-from .mixins import PermittedCafeMixin
 
 
 class Products(generics.ListCreateAPIView):
@@ -36,12 +35,18 @@ class Products(generics.ListCreateAPIView):
         serializer.save(cafe=self.request.user.employee.cafe)
 
 
-class ProductDetail(generics.RetrieveUpdateDestroyAPIView,
-                    PermittedCafeMixin):
+class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     '''This view handles all CRUD operations for cafe's products'''
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_url_kwarg = 'product_pk'
+
+    def get_queryset(self):
+        if self.request.method == 'GET':
+            return Product.objects.all()
+        else:
+            cafe = self.request.user.employee.cafe
+            return Product.objects.filter(cafe=cafe)
 
     def update(self, request, *args, **kwargs):
         '''We want to handle both PUT/PATCH updates and
@@ -64,7 +69,7 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView,
             return Response(status=drf_status.HTTP_400_BAD_REQUEST)
 
         partial = kwargs.pop('partial', False)
-        instance = self.get_permitted_object()
+        instance = self.get_object()
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -75,7 +80,7 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView,
         return Response(serializer.data)
 
     def create_new_version(self, request, *args, **kwargs):
-        instance = self.get_permitted_object()
+        instance = self.get_object()
 
         '''We want to actually create a new object '''
         serializer = ProductSerializer(data=request.data)
@@ -96,7 +101,7 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView,
     def destroy(self, request, *args, **kwargs):
         '''Do not delete the object from database, but
         remove it from the menu '''
-        instance = self.get_permitted_object()
+        instance = self.get_object()
         if not instance.on_menu:
             data = {
                 'error': 'This product has already been removed from menu'
@@ -214,13 +219,15 @@ class Cafes(generics.ListAPIView):
         return Response(resp)
 
 
-class CafeDetail(generics.RetrieveUpdateAPIView,
-                 PermittedCafeMixin):
+class CafeDetail(generics.RetrieveUpdateAPIView):
     serializer_class = CafeSerializer
-    queryset = Cafe.objects.all()
 
-    def update(self, request, *args, **kwargs):
-        return self.permitted_update(request, *args, **kwargs)
+    def get_queryset(self):
+        if self.request.method == 'GET':
+            return Cafe.objects.all()
+        else:
+            cafe = self.request.user.employee.cafe
+            return Cafe.objects.filter(pk=cafe.pk)
 
 
 class ConsumerUserInfo(generics.RetrieveAPIView):

@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User, Group
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer, TokenRefreshSerializer)
+
 from api.models import Consumer, Cafe, Employee
 
 

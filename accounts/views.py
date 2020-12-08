@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -46,4 +46,15 @@ class IsLoginUnique(APIView):
             resp = {'username_status': 'taken'}
         else:
             resp = {'username_status': 'free'}
+        return Response(resp, status=status.HTTP_200_OK)
+
+
+class CheckGroupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format='json'):
+        resp = {}
+        resp['groups'] = []
+        for group in request.user.groups.all():
+            resp['groups'].append(group.name)
         return Response(resp, status=status.HTTP_200_OK)
