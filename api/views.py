@@ -15,7 +15,6 @@ from .mixins import PermittedCafeMixin
 class Products(generics.ListCreateAPIView):
     '''Cafe menu'''
     serializer_class = ProductSerializerForMenu
-    queryset = Product.objects.none()  # Required for DjangoModelPermissions
 
     def get_queryset(self):
         pk = self.kwargs['cafe_pk']
@@ -114,7 +113,6 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView,
 
 
 class Orders(generics.ListCreateAPIView):
-    queryset = Order.objects.none()  # Required for DjangoModelPermissions
 
     def perform_create(self, serializer):
         serializer.save(consumer=self.request.user.consumer)
@@ -127,17 +125,29 @@ class Orders(generics.ListCreateAPIView):
                 return Order.objects.none()
             else:
                 if user.groups.filter(name='consumers'):
-                    return Order.objects.filter(
-                        consumer=user.consumer).filter(status=status)
+                    if status == 'completed':
+                        statuses = ['claimed', 'ready', 'unclaimed']
+                        return Order.objects.filter(
+                            consumer=user.consumer).filter(status__in=statuses)
+                    else:
+                        return Order.objects.filter(
+                            consumer=user.consumer).filter(status=status)
                 elif user.groups.filter(name='employees'):
                     cafe = user.employee.cafe
                     '''We want to return only
                     orders that are the same day
                     for employee '''
-                    return Order.objects.filter(
-                        cafe=cafe).filter(
-                        status=status).filter(
-                        created_at__gte=timezone.now()-timedelta(days=1))
+                    if status == 'completed':
+                        statuses = ['claimed', 'ready', 'unclaimed']
+                        return Order.objects.filter(
+                            cafe=cafe).filter(
+                            status__in=statuses).filter(
+                            created_at__gte=timezone.now()-timedelta(days=1))
+                    else:
+                        return Order.objects.filter(
+                            cafe=cafe).filter(
+                            status=status).filter(
+                            created_at__gte=timezone.now()-timedelta(days=1))
                 elif user.groups.filter(name='cafe_admin'):
                     cafe = user.employee.cafe
                     return Order.objects.filter(
