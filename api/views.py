@@ -223,11 +223,15 @@ class CafeDetail(generics.RetrieveUpdateAPIView):
     serializer_class = CafeSerializer
 
     def get_queryset(self):
+        if self.request.user.is_anonymous:
+            return Cafe.objects.none()
         if self.request.method == 'GET':
             return Cafe.objects.all()
-        else:
+        elif self.request.method == 'PUT':
             cafe = self.request.user.employee.cafe
             return Cafe.objects.filter(pk=cafe.pk)
+        else:
+            return Cafe.objects.none()
 
 
 class ConsumerUserInfo(generics.RetrieveAPIView):

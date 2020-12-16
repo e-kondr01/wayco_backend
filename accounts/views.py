@@ -7,6 +7,7 @@ from .serializers import *
 
 
 class CreateConsumerUser(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request, format='json'):
@@ -21,6 +22,7 @@ class CreateConsumerUser(APIView):
 
 
 class CreateEmployeeUser(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request, format='json'):
@@ -38,6 +40,7 @@ class CreateEmployeeUser(APIView):
 
 
 class IsLoginUnique(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request, format='json'):
@@ -50,6 +53,7 @@ class IsLoginUnique(APIView):
 
 
 class CheckGroupView(APIView):
+    authentication_classes = []
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format='json'):
