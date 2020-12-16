@@ -53,7 +53,6 @@ class IsLoginUnique(APIView):
 
 
 class CheckGroupView(APIView):
-    authentication_classes = []
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format='json'):

@@ -37,16 +37,26 @@ class Products(generics.ListCreateAPIView):
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     '''This view handles all CRUD operations for cafe's products'''
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_url_kwarg = 'product_pk'
 
     def get_queryset(self):
-        if self.request.method == 'GET':
-            return Product.objects.all()
+        if self.request.user.is_anonymous:
+            return Product.objects.none()
         else:
+            return Product.objects.all()
+
+    def check_object_permissions(self, request, obj):
+        if self.request.method != 'GET':
             cafe = self.request.user.employee.cafe
-            return Product.objects.filter(cafe=cafe)
+            if obj.cafe != cafe:
+                self.permission_denied(
+                    request,
+                    message="Product from another cafe",
+                    code='403'
+                )
+
+        super().check_object_permissions(request, obj)
 
     def update(self, request, *args, **kwargs):
         '''We want to handle both PUT/PATCH updates and
@@ -225,13 +235,20 @@ class CafeDetail(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         if self.request.user.is_anonymous:
             return Cafe.objects.none()
-        if self.request.method == 'GET':
-            return Cafe.objects.all()
-        elif self.request.method == 'PUT':
-            cafe = self.request.user.employee.cafe
-            return Cafe.objects.filter(pk=cafe.pk)
         else:
-            return Cafe.objects.none()
+            return Cafe.objects.all()
+
+    def check_object_permissions(self, request, obj):
+        if self.request.method == 'PUT' or self.request.method == 'PATCH':
+            cafe = self.request.user.employee.cafe
+            if obj != cafe:
+                self.permission_denied(
+                    request,
+                    message="You don't have access to this cafe",
+                    code='403'
+                )
+
+        super().check_object_permissions(request, obj)
 
 
 class ConsumerUserInfo(generics.RetrieveAPIView):
