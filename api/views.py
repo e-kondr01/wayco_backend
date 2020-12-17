@@ -39,12 +39,7 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     '''This view handles all CRUD operations for cafe's products'''
     serializer_class = ProductSerializer
     lookup_url_kwarg = 'product_pk'
-
-    def get_queryset(self):
-        if self.request.user.is_anonymous:
-            return Product.objects.none()
-        else:
-            return Product.objects.all()
+    queryset = Product.objects.all()
 
     def check_object_permissions(self, request, obj):
         if self.request.method != 'GET':
@@ -194,10 +189,19 @@ class Orders(generics.ListCreateAPIView):
 
 class UpdateOrder(generics.UpdateAPIView):
     serializer_class = ViewCompletedOrderSerializerForEmployee
-    queryset = Order.objects.all()  # Required for DjangoModelPermissions
+    queryset = Order.objects.all()
 
-    def filter_queryset(self, queryset):
-        return queryset.filter(cafe=self.request.user.employee.cafe)
+    def check_object_permissions(self, request, obj):
+        if self.request.method == 'PUT' or self.request.method == 'PATCH':
+            cafe = self.request.user.employee.cafe
+            if obj.cafe != cafe:
+                self.permission_denied(
+                    request,
+                    message="You don't have access to this order",
+                    code='403'
+                )
+
+        super().check_object_permissions(request, obj)
 
     def perform_update(self, serializer):
         if serializer.validated_data['status'] == 'ready':
@@ -231,14 +235,10 @@ class Cafes(generics.ListAPIView):
 
 class CafeDetail(generics.RetrieveUpdateAPIView):
     serializer_class = CafeSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_anonymous:
-            return Cafe.objects.none()
-        else:
-            return Cafe.objects.all()
+    queryset = Cafe.objects.all()
 
     def check_object_permissions(self, request, obj):
+        '''Cafe admin should be able to change info only about his cafe '''
         if self.request.method == 'PUT' or self.request.method == 'PATCH':
             cafe = self.request.user.employee.cafe
             if obj != cafe:
