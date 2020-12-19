@@ -134,14 +134,11 @@ class Orders(generics.ListCreateAPIView):
             if status != 'completed' and status != 'active':
                 return Order.objects.none()
             else:
-                if user.groups.filter(name='consumers'):
-                    if status == 'completed':
-                        statuses = ['claimed', 'ready', 'unclaimed']
-                        return Order.objects.filter(
-                            consumer=user.consumer).filter(status__in=statuses)
-                    else:
-                        return Order.objects.filter(
-                            consumer=user.consumer).filter(status=status)
+                if user.groups.filter(name='cafe_admin'):
+                    cafe = user.employee.cafe
+                    return Order.objects.filter(
+                        cafe=cafe).filter(status=status)
+
                 elif user.groups.filter(name='employees'):
                     cafe = user.employee.cafe
                     '''We want to return only
@@ -158,10 +155,16 @@ class Orders(generics.ListCreateAPIView):
                             cafe=cafe).filter(
                             status=status).filter(
                             created_at__gte=timezone.now()-timedelta(days=1))
-                elif user.groups.filter(name='cafe_admin'):
-                    cafe = user.employee.cafe
-                    return Order.objects.filter(
-                        cafe=cafe).filter(status=status)
+
+                elif user.groups.filter(name='consumers'):
+                    if status == 'completed':
+                        statuses = ['claimed', 'ready', 'unclaimed']
+                        return Order.objects.filter(
+                            consumer=user.consumer).filter(status__in=statuses)
+                    else:
+                        return Order.objects.filter(
+                            consumer=user.consumer).filter(status=status)
+
                 else:
                     return Order.objects.none()
         else:

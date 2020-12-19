@@ -63,7 +63,7 @@ class EmployeeUserSerializer(serializers.ModelSerializer):
                                         password=validated_data['password'])
         employees = Group.objects.get(name='employees')
         user.groups.add(employees)
-        consumers = Group.objects.get(name='employees')
+        consumers = Group.objects.get(name='consumers')
         user.groups.add(consumers)
         employee = Employee(user=user, cafe=cafe)
         employee.save()
