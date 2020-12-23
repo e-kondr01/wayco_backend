@@ -104,6 +104,7 @@ class CreateOrderedProductSerializer(serializers.ModelSerializer):
 
 
 class CreateOrderSerializer(serializers.ModelSerializer):
+    '''Serializer for creating a new order by POST'''
     ordered_products = CreateOrderedProductSerializer(many=True)
     cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
     status = serializers.CharField(max_length=16, required=False)
@@ -134,37 +135,17 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         return order
 
 
-class ViewActiveOrderSerializerForConsumer(serializers.ModelSerializer):
-    ordered_products = ViewOrderedProductSerializer(many=True)
-    cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
-
-    class Meta:
-        model = Order
-        fields = ['id', 'cafe', 'order_num', 'created_at', 'total_sum',
-                  'status', 'ordered_products']
-
-
-class ViewActiveOrderSerializerForEmployee(serializers.ModelSerializer):
-    ordered_products = ViewOrderedProductSerializer(many=True)
-    consumer = serializers.StringRelatedField()
-
-    class Meta:
-        model = Order
-        fields = ['id', 'consumer', 'order_num', 'created_at', 'total_sum',
-                  'status', 'ordered_products']
-
-
-class ViewCompletedOrderSerializerForConsumer(serializers.ModelSerializer):
+class ViewOrderSerializerForConsumer(serializers.ModelSerializer):
     ordered_products = ViewOrderedProductSerializer(many=True)
     cafe = serializers.PrimaryKeyRelatedField(queryset=Cafe.objects.all())
 
     class Meta:
         model = Order
         fields = ['id', 'cafe', 'order_num', 'created_at', 'completed_at',
-                  'total_sum', 'status', 'ordered_products', ]
+                  'total_sum', 'status', 'ordered_products']
 
 
-class ViewCompletedOrderSerializerForEmployee(serializers.ModelSerializer):
+class ViewOrderSerializerForEmployee(serializers.ModelSerializer):
     ordered_products = ViewOrderedProductSerializer(many=True)
     consumer = serializers.StringRelatedField()
 

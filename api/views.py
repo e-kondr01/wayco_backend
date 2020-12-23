@@ -122,7 +122,7 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(data=data, status=drf_status.HTTP_204_NO_CONTENT)
 
 
-class Orders(generics.ListCreateAPIView):
+class OrdersView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(consumer=self.request.user.consumer)
@@ -130,68 +130,73 @@ class Orders(generics.ListCreateAPIView):
     def get_queryset(self):
         status = self.request.query_params.get('status', None)
         user = self.request.user
-        if status:
-            if status != 'completed' and status != 'active':
-                return Order.objects.none()
-            else:
-                if user.groups.filter(name='cafe_admin'):
-                    cafe = user.employee.cafe
+        allowed_statuses = ['active', 'completed']
+        if status and (status not in allowed_statuses):
+            return Order.objects.none()
+
+        if user.groups.filter(name='cafe_admin'):
+            cafe = user.employee.cafe
+            if status:
+                if status == 'completed':
+                    statuses = ['claimed', 'ready', 'unclaimed']
+                    return Order.objects.filter(
+                        cafe=cafe).filter(status__in=statuses)
+                else:
+                    '''This can obly be "active" status '''
                     return Order.objects.filter(
                         cafe=cafe).filter(status=status)
+            else:
+                return Order.objects.filter(cafe=cafe)
 
-                elif user.groups.filter(name='employees'):
-                    cafe = user.employee.cafe
-                    '''We want to return only
-                    orders that are the same day
-                    for employee '''
-                    if status == 'completed':
-                        statuses = ['claimed', 'ready', 'unclaimed']
-                        return Order.objects.filter(
-                            cafe=cafe).filter(
-                            status__in=statuses).filter(
-                            created_at__gte=timezone.now()-timedelta(days=1))
-                    else:
-                        return Order.objects.filter(
-                            cafe=cafe).filter(
-                            status=status).filter(
-                            created_at__gte=timezone.now()-timedelta(days=1))
-
-                elif user.groups.filter(name='consumers'):
-                    if status == 'completed':
-                        statuses = ['claimed', 'ready', 'unclaimed']
-                        return Order.objects.filter(
-                            consumer=user.consumer).filter(status__in=statuses)
-                    else:
-                        return Order.objects.filter(
-                            consumer=user.consumer).filter(status=status)
-
+        elif user.groups.filter(name='employees'):
+            cafe = user.employee.cafe
+            '''We want to return only
+            orders that are the same day
+            for employee '''
+            if status:
+                if status == 'completed':
+                    statuses = ['claimed', 'ready', 'unclaimed']
+                    return Order.objects.filter(
+                        cafe=cafe).filter(
+                        status__in=statuses).filter(
+                        created_at__gte=timezone.now()-timedelta(days=1))
                 else:
-                    return Order.objects.none()
-        else:
-            return Order.objects.none()
+                    return Order.objects.filter(
+                        cafe=cafe).filter(
+                        status=status).filter(
+                        created_at__gte=timezone.now()-timedelta(days=1))
+            else:
+                return Order.objects.filter(
+                        cafe=cafe).filter(
+                        created_at__gte=timezone.now()-timedelta(days=1))
+
+        elif user.groups.filter(name='consumers'):
+            if status:
+                if status == 'completed':
+                    statuses = ['claimed', 'ready', 'unclaimed']
+                    return Order.objects.filter(
+                        consumer=user.consumer).filter(status__in=statuses)
+                else:
+                    return Order.objects.filter(
+                        consumer=user.consumer).filter(status=status)
+            else:
+                return Order.objects.filter(consumer=user.consumer)
 
     def post(self, request, *args, **kwargs):
         self.serializer_class = CreateOrderSerializer
         return self.create(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        status = request.query_params.get('status', None)
-        if request.user.groups.filter(name='consumers'):
-            if status == 'active':
-                self.serializer_class = ViewActiveOrderSerializerForConsumer
-            elif status == 'completed':
-                self.serializer_class = ViewCompletedOrderSerializerForConsumer
-        elif request.user.groups.filter(name='employees'):
-            if status == 'active':
-                self.serializer_class = ViewActiveOrderSerializerForEmployee
-            elif status == 'completed':
-                self.serializer_class = ViewCompletedOrderSerializerForEmployee
+        if request.user.groups.filter(name='employees'):
+            self.serializer_class = ViewOrderSerializerForEmployee
+        elif request.user.groups.filter(name='consumers'):
+            self.serializer_class = ViewOrderSerializerForConsumer
 
         return self.list(request, *args, **kwargs)
 
 
 class UpdateOrder(generics.UpdateAPIView):
-    serializer_class = ViewCompletedOrderSerializerForEmployee
+    serializer_class = ViewOrderSerializerForEmployee
     queryset = Order.objects.all()
 
     def check_object_permissions(self, request, obj):
