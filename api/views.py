@@ -182,6 +182,9 @@ class OrdersView(generics.ListCreateAPIView):
             else:
                 return Order.objects.filter(consumer=user.consumer)
 
+        else:
+            return Order.objects.none()
+
     def post(self, request, *args, **kwargs):
         self.serializer_class = CreateOrderSerializer
         return self.create(request, *args, **kwargs)
