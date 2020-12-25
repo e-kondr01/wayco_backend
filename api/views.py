@@ -129,48 +129,66 @@ class OrdersView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         status = self.request.query_params.get('status', None)
+        employee_version = self.request.query_params.get('cafe', None)
+        full_history = self.request.query_params.get('full-history', None)
+
         user = self.request.user
         allowed_statuses = ['active', 'completed']
         if status and (status not in allowed_statuses):
             return Order.objects.none()
 
-        if user.groups.filter(name='cafe_admin'):
-            cafe = user.employee.cafe
-            if status:
-                if status == 'completed':
-                    statuses = ['claimed', 'ready', 'unclaimed']
-                    return Order.objects.filter(
-                        cafe=cafe).filter(status__in=statuses)
+        if employee_version == 'true':
+            '''Cafe order history'''
+            if full_history == 'true':
+                '''Full order history. Permitted for cafe_admin '''
+                if user.groups.filter(name='cafe_admins'):
+                    cafe = user.employee.cafe
+                    if status:
+                        if status == 'completed':
+                            statuses = ['claimed', 'ready', 'unclaimed']
+                            return Order.objects.filter(
+                                cafe=cafe).filter(status__in=statuses)
+                        else:
+                            '''This can obly be "active" status '''
+                            return Order.objects.filter(
+                                cafe=cafe).filter(status=status)
+                    else:
+                        return Order.objects.filter(cafe=cafe)
                 else:
-                    '''This can obly be "active" status '''
-                    return Order.objects.filter(
-                        cafe=cafe).filter(status=status)
-            else:
-                return Order.objects.filter(cafe=cafe)
-
-        elif user.groups.filter(name='employees'):
-            cafe = user.employee.cafe
-            '''We want to return only
-            orders that are the same day
-            for employee '''
-            if status:
-                if status == 'completed':
-                    statuses = ['claimed', 'ready', 'unclaimed']
-                    return Order.objects.filter(
-                        cafe=cafe).filter(
-                        status__in=statuses).filter(
-                        created_at__gte=timezone.now()-timedelta(days=1))
+                    self.permission_denied(
+                        self.request,
+                        message="You don't have access to full order history",
+                        code='403'
+                    )
+            elif user.groups.filter(name='employees'):
+                '''All orders for the cafe of the same day. Permitted for
+                 employee and cafe_admin'''
+                cafe = user.employee.cafe
+                if status:
+                    if status == 'completed':
+                        statuses = ['claimed', 'ready', 'unclaimed']
+                        return Order.objects.filter(
+                            cafe=cafe).filter(
+                            status__in=statuses).filter(
+                            created_at__gte=timezone.now()-timedelta(days=1))
+                    else:
+                        return Order.objects.filter(
+                            cafe=cafe).filter(
+                            status=status).filter(
+                            created_at__gte=timezone.now()-timedelta(days=1))
                 else:
                     return Order.objects.filter(
-                        cafe=cafe).filter(
-                        status=status).filter(
-                        created_at__gte=timezone.now()-timedelta(days=1))
+                            cafe=cafe).filter(
+                            created_at__gte=timezone.now()-timedelta(days=1))
             else:
-                return Order.objects.filter(
-                        cafe=cafe).filter(
-                        created_at__gte=timezone.now()-timedelta(days=1))
+                self.permission_denied(
+                    self.request,
+                    message="You don't have access to all cafe orders",
+                    code='403'
+                )
 
         elif user.groups.filter(name='consumers'):
+            '''Personal orders'''
             if status:
                 if status == 'completed':
                     statuses = ['claimed', 'ready', 'unclaimed']
@@ -183,6 +201,7 @@ class OrdersView(generics.ListCreateAPIView):
                 return Order.objects.filter(consumer=user.consumer)
 
         else:
+            '''Needed for OPTIONS request '''
             return Order.objects.none()
 
     def post(self, request, *args, **kwargs):
