@@ -52,7 +52,7 @@ class IsLoginUnique(APIView):
         return Response(resp, status=status.HTTP_200_OK)
 
 
-class CheckGroupView(APIView):
+class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format='json'):
@@ -60,4 +60,6 @@ class CheckGroupView(APIView):
         resp['groups'] = []
         for group in request.user.groups.all():
             resp['groups'].append(group.name)
+        if request.user.groups.filter(name='employees'):
+            resp['cafe_id'] = request.user.employee.cafe.pk
         return Response(resp, status=status.HTTP_200_OK)

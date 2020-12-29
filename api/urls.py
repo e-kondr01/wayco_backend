@@ -12,7 +12,6 @@ urlpatterns = [
      path('cafes', Cafes.as_view()),
      path('cafes/<int:pk>', CafeDetail.as_view()),
 
-     path('consumer-info', ConsumerUserInfo.as_view(), name='consumer_info'),
      path('add-to-favourites/<int:pk>', AddToFavourites.as_view()),
      path('remove-from-favourites/<int:pk>', RemoveFromFavourites.as_view()),
      path('cafes/<int:pk>/ratings', RateCafe.as_view()),

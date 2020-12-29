@@ -281,16 +281,6 @@ class CafeDetail(generics.RetrieveUpdateAPIView):
         super().check_object_permissions(request, obj)
 
 
-class ConsumerUserInfo(generics.RetrieveAPIView):
-    ''' Get consumer info'''
-    serializer_class = ConsumerUserInfoSerializer
-    queryset = Consumer.objects.none()  # Required for DjangoModelPermissions
-
-    def get_object(self):
-        obj = get_object_or_404(User, pk=self.request.user.pk)
-        return obj
-
-
 class AddToFavourites(APIView):
     queryset = Consumer.objects.none()  # Required for DjangoModelPermissions
 

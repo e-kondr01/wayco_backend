@@ -13,5 +13,5 @@ urlpatterns = [
     path('token', TokenObtainPairView.as_view()),
     path('token/refresh', TokenRefreshView.as_view()),
     path('login-unique', views.IsLoginUnique.as_view()),
-    path('check-groups', views.CheckGroupView.as_view())
+    path('user-info', views.UserInfoView.as_view())
 ]
