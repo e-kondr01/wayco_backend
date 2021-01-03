@@ -56,18 +56,25 @@ class ProductSerializer(serializers.ModelSerializer):
                   'options']
 
     def create(self, validated_data):
-        options_data = validated_data.pop('options')
-        has_options = True if options_data else False
-        product = Product.objects.create(has_options=has_options,
-                                         **validated_data)
-
-        for option_data in options_data:
-            choices_data = option_data.pop('choices')
-            option = ProductOption.objects.create(
-                product=product, **option_data)
-            for choice_data in choices_data:
-                choice = ProductOptionChoice.objects.create(
-                    product_option=option, **choice_data)
+        if 'options' in validated_data:
+            options_data = validated_data.pop('options')
+            has_options = True if options_data else False
+            product = Product.objects.create(has_options=has_options,
+                                             on_menu=True,
+                                             **validated_data)
+            for option_data in options_data:
+                if 'choices' in option_data:
+                    choices_data = option_data.pop('choices')
+                    option = ProductOption.objects.create(
+                        product=product, **option_data)
+                    for choice_data in choices_data:
+                        choice = ProductOptionChoice.objects.create(
+                            product_option=option, **choice_data)
+        else:
+            has_options = False
+            product = Product.objects.create(has_options=has_options,
+                                             on_menu=True,
+                                             **validated_data)
 
         return product
 

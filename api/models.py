@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 
 class Cafe(models.Model):
     name = models.CharField(max_length=128, unique=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6,
+    latitude = models.DecimalField(max_digits=11, decimal_places=8,
                                    null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6,
+    longitude = models.DecimalField(max_digits=11, decimal_places=8,
                                     null=True, blank=True)
     address = models.CharField(max_length=128)
     average_rating = models.FloatField(blank=True, null=True)
