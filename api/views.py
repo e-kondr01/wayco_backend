@@ -96,7 +96,7 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
         instance.on_menu = False
         instance.save()
 
-        serializer.save(on_menu=True, cafe=self.request.user.employee.cafe)
+        serializer.save(cafe=self.request.user.employee.cafe)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
