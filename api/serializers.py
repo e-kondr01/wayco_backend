@@ -5,6 +5,10 @@ from .models import *
 
 
 class ProductOptionChoiceSerializer(serializers.ModelSerializer):
+    available = serializers.BooleanField(required=False)
+    default = serializers.BooleanField(required=False)
+    '''"Default" is not necessary in JSON from frontend, but should
+    be defined before saving to DB '''
 
     class Meta:
         model = ProductOptionChoice
@@ -68,8 +72,14 @@ class ProductSerializer(serializers.ModelSerializer):
                     option = ProductOption.objects.create(
                         product=product, **option_data)
                     for choice_data in choices_data:
+                        ''' "Default" parameter may not be sent from front'''
+                        if 'default' in choice_data:
+                            default = choice_data.pop('default')
+                        else:
+                            default = False
                         choice = ProductOptionChoice.objects.create(
-                            product_option=option, **choice_data)
+                            product_option=option,
+                            default=default, **choice_data)
         else:
             has_options = False
             product = Product.objects.create(has_options=has_options,
