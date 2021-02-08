@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer, TokenRefreshSerializer)
 
-from api.models import Consumer, Cafe, Employee
+from .models import Consumer, Cafe, Employee
 
 
 class ConsumerUserSerializer(serializers.ModelSerializer):

@@ -6,4 +6,3 @@ djangorestframework==3.12.1
 djangorestframework-simplejwt==4.4.0
 python-decouple==3.3
 psycopg2==2.8.5
-whitenoise==5.2.0
