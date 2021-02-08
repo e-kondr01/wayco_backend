@@ -27,8 +27,8 @@ ALLOWED_HOSTS = [config('allowed_hosts')]
 # Application definition
 
 INSTALLED_APPS = [
-    'apps.api',
-    'apps.accounts',
+    'api',
+    'accounts',
 
     'rest_framework',
     'rest_framework_simplejwt',
