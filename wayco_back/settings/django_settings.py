@@ -9,7 +9,7 @@ from decouple import config
 from dj_database_url import parse as db_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -121,5 +121,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = config('static_root')
-MEDIA_ROOT = config('media_root')
+STATIC_ROOT = BASE_DIR.root / config('static_root')
+MEDIA_ROOT = BASE_DIR.root / config('media_root')
