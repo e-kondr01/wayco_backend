@@ -41,7 +41,6 @@ class CafePhoto(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=128)
     price = models.DecimalField(max_digits=7, decimal_places=2)
-    image_src = models.URLField(null=True, blank=True)
     cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE,
                              related_name='products')
     available = models.BooleanField(null=True, blank=True)
@@ -51,6 +50,16 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return f'{self.name} от {self.created_at}'
+
+
+class ProductImage(models.Model):
+    image = models.ImageField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT,
+                                related_name='images')
+
+    def __str__(self) -> str:
+        return f'Изображение для {self.created_at}'
 
 
 class ProductOption(models.Model):

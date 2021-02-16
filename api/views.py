@@ -4,7 +4,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework import status as drf_status
 from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
+
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import *
 from .serializers import *
@@ -337,3 +340,11 @@ class RateCafe(generics.CreateAPIView):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=drf_status.HTTP_201_CREATED,
                         headers=headers)
+
+
+class ProductImageUploadView(generics.CreateAPIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    queryset = ProductImage.objects.none()
+    serializer_class = ProductImageSerializer
+    parser_classes = [MultiPartParser, FormParser]

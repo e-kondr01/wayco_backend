@@ -1,0 +1,7 @@
+secret_key=''
+debug=
+DATABASE_URL=''
+allowed_hosts = ''
+cors_allowed_origins = ''
+static_root = ''
+media_root = ''

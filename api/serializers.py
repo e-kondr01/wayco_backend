@@ -227,3 +227,12 @@ class CafeRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = CafeRating
         fields = ['id', 'consumer', 'cafe', 'value']
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all())
+
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image', 'uploaded_at', 'product']
