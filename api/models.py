@@ -47,6 +47,7 @@ class Product(models.Model):
     has_options = models.BooleanField()
     on_menu = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    image_src = models.URLField(blank=True)
 
     def __str__(self) -> str:
         return f'{self.name} от {self.created_at}'
@@ -55,11 +56,9 @@ class Product(models.Model):
 class ProductImage(models.Model):
     image = models.ImageField()
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT,
-                                related_name='images')
 
     def __str__(self) -> str:
-        return f'Изображение для {self.created_at}'
+        return f'Изображение {self.uploaded_at}'
 
 
 class ProductOption(models.Model):

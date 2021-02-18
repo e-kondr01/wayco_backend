@@ -343,8 +343,5 @@ class RateCafe(generics.CreateAPIView):
 
 
 class ProductImageUploadView(generics.CreateAPIView):
-    authentication_classes = []
-    permission_classes = [AllowAny]
-    queryset = ProductImage.objects.none()
+    queryset = ProductImage.objects.none()  # DjangoModelPermissions
     serializer_class = ProductImageSerializer
-    parser_classes = [MultiPartParser, FormParser]

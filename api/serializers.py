@@ -230,9 +230,7 @@ class CafeRatingSerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
-    product = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all())
 
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'uploaded_at', 'product']
+        fields = ['id', 'image', 'uploaded_at']
